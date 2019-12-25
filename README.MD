@@ -44,6 +44,7 @@ The routes available are specified below:
 Register User       ->  http://localhost:8888/register [POST]
 Login Local         ->  http://localhost:8888/authenticate [POST]
 Login Google        ->  http://localhost:8888/oauth-authenticate [POST]
-Show User Detail    ->  http://localhost:8888/api/v1/users/{uuid} [GET]
+Show User detail    ->  http://localhost:8888/api/v1/users/{uuid} [GET]
+Change User status  ->  http://localhost:8888/api/v1/users/{uuid}/{status}  [GET] [enable|disable]
 List all Users      ->  http://localhost:8888/api/v1/users [GET]
 ```
