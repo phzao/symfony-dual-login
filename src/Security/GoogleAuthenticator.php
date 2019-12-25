@@ -54,6 +54,7 @@ class GoogleAuthenticator extends SocialAuthenticator
     {
         return $request->getPathInfo() == '/connect/google/check' && $request->isMethod('GET');
     }
+
     /**
      * @param Request $request
      *
@@ -63,6 +64,7 @@ class GoogleAuthenticator extends SocialAuthenticator
     {
         return $this->fetchAccessToken($this->getGoogleClient());
     }
+
     /**
      * @param mixed                 $credentials
      * @param UserProviderInterface $userProvider
@@ -79,9 +81,7 @@ class GoogleAuthenticator extends SocialAuthenticator
 
 
         $email = $googleUser->getEmail();
-        $user  = $this->em
-                        ->getRepository(User::class)
-                        ->findOneBy(['email' => $email]);
+        $user = $this->userService->getUserByEmail($email);
 
         if (!$user) {
             $data = ["email" => $googleUser->getEmail()];
@@ -90,8 +90,9 @@ class GoogleAuthenticator extends SocialAuthenticator
 
         return $user;
     }
+
     /**
-     * @return \KnpU\OAuth2ClientBundle\Client\OAuth2Client
+     * @return \KnpU\OAuth2ClientBundle\Client\OAuth2ClientInterface
      */
     private function getGoogleClient()
     {

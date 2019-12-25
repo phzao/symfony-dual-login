@@ -2,6 +2,7 @@
 
 namespace App\Entity\Interfaces;
 
+use App\Entity\User;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
@@ -14,4 +15,16 @@ interface UsuarioInterface extends UserInterface
      * @return array
      */
     public function getLoginData(): array;
+
+    /**
+     * @return User
+     */
+    public function setDisable(): User;
+
+    /**
+     * @return User
+     */
+    public function setEnable(): User;
+
+    public function delete(): void;
 }

@@ -35,3 +35,15 @@ docker exec -it sym-php composer install
 ```
 docker exec -it sym-php php binn/console doctrine:migration:migrate
 ```
+
+### Routes
+
+The routes available are specified below:
+
+```
+Register User       ->  http://localhost:8888/register [POST]
+Login Local         ->  http://localhost:8888/authenticate [POST]
+Login Google        ->  http://localhost:8888/oauth-authenticate [POST]
+Show User Detail    ->  http://localhost:8888/api/v1/users/{uuid} [GET]
+List all Users      ->  http://localhost:8888/api/v1/users [GET]
+```

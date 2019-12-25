@@ -6,6 +6,7 @@ use App\Entity\Interfaces\ModelInterface;
 use App\Entity\Interfaces\SimpleTimeInterface;
 use App\Entity\Interfaces\UsuarioInterface;
 use App\Entity\Traits\SimpleTime;
+use App\Utils\Enums\GeneralTypes;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -50,9 +51,24 @@ class User extends ModelBase implements UsuarioInterface, ModelInterface, Simple
 
     /**
      * @var string The hashed password
+     * @Assert\NotBlank(message="A password is required!")
+     * @Assert\Length(
+     *      min = 6,
+     *      max = 6,
+     *      minMessage = "Password must be at least {{ limit }} characters long",
+     *      maxMessage = "Password cannot be longer than {{ limit }} characters"
+     * )
      * @ORM\Column(type="string")
      */
     protected $password;
+
+    /**
+     * @var string The status user
+     * @Assert\NotBlank(message="A status is required!")
+     * @Assert\Choice({"enable", "disable", "blocked"})
+     * @ORM\Column(type="string", length=20)
+     */
+    protected $status = GeneralTypes::STATUS_ENABLE;
 
     /**
      * @ORM\Column(type="datetime")
@@ -88,7 +104,7 @@ class User extends ModelBase implements UsuarioInterface, ModelInterface, Simple
     public function __construct()
     {
         $this->apiTokens  = new ArrayCollection();
-        $this->id         = Uuid::uuid4();
+        $this->id         = Uuid::uuid4()->toString();
         $this->created_at = new \DateTime("now");
     }
 
@@ -98,21 +114,6 @@ class User extends ModelBase implements UsuarioInterface, ModelInterface, Simple
     public function getId(): ?string
     {
         return $this->id;
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
-
-    public function setEmail(string $email): self
-    {
-        $this->email = $email;
-
-        return $this;
     }
 
     /**
@@ -181,8 +182,8 @@ class User extends ModelBase implements UsuarioInterface, ModelInterface, Simple
      */
     public function encryptPassword(UserPasswordEncoderInterface $passwordEncoder)
     {
-        $passwd         = empty($this->password) ? "" : $this->password;
-        $this->password = $passwordEncoder->encodePassword($this, $passwd);
+        $password       = empty($this->password) ? "" : $this->password;
+        $this->password = $passwordEncoder->encodePassword($this, $password);
     }
 
     /**
@@ -191,9 +192,11 @@ class User extends ModelBase implements UsuarioInterface, ModelInterface, Simple
     public function getFullData(): array
     {
         return [
-            "id"         => $this->id,
-            "email"      => $this->email,
-            "created_at" => $this->getDateTimeStringFrom('created_at')
+            "id"                 => $this->id,
+            "email"              => $this->email,
+            "created_at"         => $this->getDateTimeStringFrom('created_at'),
+            "status"             => $this->status,
+            "status_description" => GeneralTypes::getStatusDescription($this->status)
         ];
     }
 
@@ -241,11 +244,34 @@ class User extends ModelBase implements UsuarioInterface, ModelInterface, Simple
     /**
      * @return array
      */
-    public function getLoginData():array
+    public function getLoginData(): array
     {
         return [
             "id"    => $this->id,
             "email" => $this->email
         ];
+    }
+
+    /**
+     * @return User
+     */
+    public function setDisable(): self
+    {
+        $this->status = GeneralTypes::STATUS_DISABLE;
+        return $this;
+    }
+
+    /**
+     * @return User
+     */
+    public function setEnable(): self
+    {
+        $this->status = GeneralTypes::STATUS_ENABLE;
+        return $this;
+    }
+
+    public function delete(): void
+    {
+        $this->deleted_at = new \DateTime('now');
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Entity\Interfaces;
 
 use App\Entity\User;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * Interface ApiTokenInterface
@@ -10,11 +11,6 @@ use App\Entity\User;
  */
 interface ApiTokenInterface
 {
-//    /**
-//     * @return null|string
-//     */
-//    public function getId(): ?string;
-
     /**
      * @return null|User
      */
@@ -27,7 +23,10 @@ interface ApiTokenInterface
      */
     public function setUsuario(?User $usuario);
 
-    public function makeExpiredToken();
+    /**
+     * @return null|UserInterface
+     */
+    public function isValidToken(): ? UserInterface;
 
     /**
      * @return array

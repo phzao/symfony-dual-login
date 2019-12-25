@@ -34,6 +34,7 @@ class ValidationService implements ValidateModelInterface
     public function validating($model)
     {
         $errors = $this->validator->validate($model);
+
         if (!$errors instanceof ConstraintViolationList) {
             return ;
         }

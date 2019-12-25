@@ -15,10 +15,10 @@ security:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
 
-#        api:
-#            pattern: ^/api
-#            anonymous: false
-#            logout: false
+        api:
+            pattern: ^/api
+            anonymous: false
+            logout: false
             guard:
                 provider: app_user_provider
                 authenticators:

@@ -52,22 +52,24 @@ class APIController extends AbstractController
             $this->statusCode,
             $headers);
     }
+
     /**
-     * @param       $data
-     * @param array $headers
+     * @param string $data
+     * @param array  $headers
      *
      * @return JsonResponse
      */
-    public function error(string $data, $headers = [])
+    public function errorMessage(string $data, $headers = [])
     {
         $response = [
-            'status' => 'error',
-            'data'   => $data
+            'status'  => 'error',
+            'message' => $data
         ];
         return new JsonResponse($response,
-            400,
-            $headers);
+                                $this->statusCode,
+                                $headers);
     }
+
     /**
      * @param string $errors
      * @param array  $headers
@@ -158,6 +160,6 @@ class APIController extends AbstractController
     {
         return $this
                     ->setStatusCode(404)
-                    ->respondWithErrors($message);
+                    ->errorMessage($message);
     }
 }

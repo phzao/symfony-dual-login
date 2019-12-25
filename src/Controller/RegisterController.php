@@ -54,9 +54,10 @@ class RegisterController extends APIController
             $user = new User();
 
             $user->setAttributes($data);
-            $user->encryptPassword($passwordEncoder);
 
             $validationService->validating($user);
+
+            $user->encryptPassword($passwordEncoder);
 
             $this->repository->save($user);
 
@@ -74,7 +75,7 @@ class RegisterController extends APIController
             return $this->respondNotFound($exception->getMessage());
         } catch (\Exception $exception) {
 
-            return $this->respondWithErrors($exception->getMessage());
+            return $this->error($exception->getMessage());
         }
     }
 
@@ -118,7 +119,7 @@ class RegisterController extends APIController
             return $this->respondWithInvalidCredentials($exception->getMessage());
         } catch (\Exception $exception) {
 
-            return $this->respondWithErrors($exception->getMessage());
+            return $this->error($exception->getMessage());
         }
     }
 }

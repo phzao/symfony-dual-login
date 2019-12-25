@@ -3,6 +3,8 @@
 namespace App\Security;
 
 use App\Entity\ApiToken;
+use App\Entity\Interfaces\ApiTokenInterface;
+use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -61,8 +63,7 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
      * @param mixed                 $credentials
      * @param UserProviderInterface $userProvider
      *
-     * @return null|object|UserInterface|void
-     * @throws \Exception
+     * @return void|UserInterface|User
      */
     public function getUser($credentials, UserProviderInterface $userProvider)
     {
@@ -72,6 +73,9 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
             return;
         }
 
+        /**
+         * @var ApiTokenInterface
+         */
         $apiToken = $this->em
                         ->getRepository(ApiToken::class)
                         ->findOneBy(['token' => $apiToken, 'expired_at' => null]);
@@ -80,15 +84,10 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
             return;
         }
 
-        $now         = new \DateTime("now");
-        $expire_date = $apiToken->getExpireAt();
-
-        if ($now < $expire_date) {
-            return $apiToken->getUsuario();
+        if ($user = $apiToken->isValidToken()) {
+            return $user;
         }
 
-        $this->expired = true;
-        $apiToken->makeExpiredToken();
         $this->em->flush();
 
         return ;

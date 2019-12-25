@@ -6,6 +6,7 @@ use App\Entity\Interfaces\ApiTokenInterface;
 use App\Entity\Traits\SimpleTime;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity
@@ -21,29 +22,29 @@ class ApiToken implements ApiTokenInterface
      * @ORM\Id()
      * @ORM\Column(name="id", type="uuid", unique=true)
      */
-    private $id;
+    protected $id;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $token;
+    protected $token;
 
     /**
      * @ORM\Column(type="datetime")
      */
-    private $expire_at;
+    protected $expire_at;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private $expired_at;
+    protected $expired_at;
 
     /**
      * @var User
      * @ORM\ManyToOne(targetEntity="App\Entity\User", inversedBy="apiTokens")
      * @ORM\JoinColumn(referencedColumnName="id" ,nullable=false)
      */
-    private $usuario;
+    protected $usuario;
 
     /**
      * ApiToken constructor.
@@ -53,37 +54,10 @@ class ApiToken implements ApiTokenInterface
     {
         $this->token     = bin2hex(random_bytes(60));
         $this->expire_at = new \DateTime('+24 hour');
-        $this->id        = Uuid::uuid4();
+        $id              = Uuid::uuid4();
+        $this->id        = $id->toString();
     }
 
-//    /**
-//     * @return null|string
-//     */
-//    public function getId(): ?string
-//    {
-//        return $this->id;
-//    }
-//
-//    /**
-//     * @return null|string
-//     */
-//    public function getToken(): ?string
-//    {
-//        return $this->token;
-//    }
-//
-//    /**
-//     * @param string $token
-//     *
-//     * @return ApiToken
-//     */
-//    public function setToken(string $token): self
-//    {
-//        $this->token = $token;
-//
-//        return $this;
-//    }
-//
     /**
      * @return null|\DateTimeInterface
      */
@@ -91,33 +65,6 @@ class ApiToken implements ApiTokenInterface
     {
         return $this->expire_at;
     }
-//
-//    public function setExpireAt(\DateTimeInterface $expire_at): self
-//    {
-//        $this->expire_at = $expire_at;
-//
-//        return $this;
-//    }
-//
-//    public function getExpiredAt(): ?\DateTimeInterface
-//    {
-//        return $this->expired_at;
-//    }
-//
-//    public function setExpiredAt(?\DateTimeInterface $expired_at): self
-//    {
-//        $this->expired_at = $expired_at;
-//
-//        return $this;
-//    }
-//
-//    /**
-//     * @return null|\DateTimeInterface
-//     */
-//    public function getExpiresAt(): ?\DateTimeInterface
-//    {
-//        return $this->expire_at;
-//    }
 
     /**
      * @return null|User
@@ -144,20 +91,35 @@ class ApiToken implements ApiTokenInterface
      */
     public function getDetailsToken(): array
     {
+        $login = empty($this->usuario) ? null : $this->usuario->getLoginData();
+
         return [
-            "id_token"  => $this->id,
+            "id"        => $this->id,
             "token"     => $this->token,
-            "usuario"   => $this->usuario->getLoginData(),
+            "usuario"   => $login,
             "expire_at" => $this->getDateTimeStringFrom("expire_at")
         ];
     }
 
     /**
+     * @return mixed|UserInterface
      * @throws \Exception
      */
-    public function makeExpiredToken()
+    public function isValidToken(): ? UserInterface
     {
+        if (!empty($this->expired_at)) {
+            return false;
+        }
+
+        $now = new \DateTime("now");
+
+        if ($now < $this->expire_at) {
+            return $this->usuario;
+        }
+
         $this->expired_at = new \DateTime("now");
+
+        return false;
     }
 
 
