@@ -2,7 +2,7 @@ version: "3.7"
 services:
     webserver:
       image: nginx:alpine
-      container_name: novesfora-web
+      container_name: my-web
       working_dir: /application
       volumes:
           - ./:/application
@@ -10,19 +10,19 @@ services:
       ports:
         - "8888:8888"
       networks:
-        - novesfora-net
+        - my-net
 
     php-fpm:
       build: phpdocker/php-fpm
-      container_name: novesfora-php
+      container_name: my-php
       working_dir: /application
       volumes:
         - ./:/application
         - ./phpdocker/php-fpm/php-ini-overrides.ini:/etc/php/7.2/fpm/conf.d/99-overrides.ini
       networks:
-        - novesfora-net
+        - my-net
 
 networks:
-  novesfora-net:
+  my-net:
     external:
-      name: novesfora_network
+      name: my_network
