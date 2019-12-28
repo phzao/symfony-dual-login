@@ -11,6 +11,7 @@ interface ModelInterface
      * @param array $values
      */
     public function setAttributes(array $values): void;
+
     /**
      * @param string $key
      * @param        $value
@@ -26,4 +27,6 @@ interface ModelInterface
      * @return null|string
      */
     public function getId(): ?string;
+
+    public function generateUuid(): void;
 }

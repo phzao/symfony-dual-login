@@ -6,6 +6,7 @@ use App\Entity\Interfaces\ModelInterface;
 use App\Entity\Interfaces\SimpleTimeInterface;
 use App\Entity\Interfaces\UsuarioInterface;
 use App\Entity\Traits\SimpleTime;
+use App\Entity\Traits\UuidControl;
 use App\Utils\Enums\GeneralTypes;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -21,15 +22,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 class User extends ModelBase implements UsuarioInterface, ModelInterface, SimpleTimeInterface
 {
-    use SimpleTime;
-
-    /**
-     * @var \Ramsey\Uuid\UuidInterface
-     *
-     * @ORM\Id()
-     * @ORM\Column(name="id", type="uuid", unique=true)
-     */
-    protected $id;
+    use SimpleTime, UuidControl;
 
     /**
      * @Assert\NotBlank(message="Email is required!")
@@ -104,7 +97,6 @@ class User extends ModelBase implements UsuarioInterface, ModelInterface, Simple
     public function __construct()
     {
         $this->apiTokens  = new ArrayCollection();
-        $this->id         = Uuid::uuid4()->toString();
         $this->created_at = new \DateTime("now");
     }
 
@@ -274,5 +266,18 @@ class User extends ModelBase implements UsuarioInterface, ModelInterface, Simple
     public function delete(): void
     {
         $this->deleted_at = new \DateTime('now');
+    }
+
+    /**
+     * @return string
+     */
+    public function getStatus(): string
+    {
+        return (string) $this->status;
+    }
+
+    public function updatedTime(): void
+    {
+        $this->updated_at = new \DateTime('now');
     }
 }

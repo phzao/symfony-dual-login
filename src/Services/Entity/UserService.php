@@ -7,6 +7,7 @@ use App\Repository\Interfaces\UserRepositoryInterface;
 use App\Services\Entity\Interfaces\UserServiceInterface;
 use App\Utils\Enums\GeneralTypes;
 use App\Utils\HandleErrors\ErrorMessage;
+use Doctrine\ORM\EntityNotFoundException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
@@ -35,6 +36,7 @@ class UserService implements UserServiceInterface
      * @param array $data
      *
      * @return User|mixed
+     * @throws \Exception
      */
     public function register(array $data)
     {
@@ -44,7 +46,7 @@ class UserService implements UserServiceInterface
         if (empty($data["password"])) {
             $user->setPassword(rand(1000, 9999));
         }
-
+        $user->generateUuid();
         $this->repository->save($user);
 
         return $user;
@@ -53,21 +55,32 @@ class UserService implements UserServiceInterface
     /**
      * @param User   $user
      * @param string $status
+     *
+     * @return mixed|void
+     * @throws EntityNotFoundException
      */
     public function updateStatus(User $user, string $status)
     {
         $status_list = GeneralTypes::STATUS_LIST;
 
         if (!in_array($status, $status_list)) {
-            $list = ["status" => "This status is invalid!"];
-            $msg = ErrorMessage::getMessageToJson($list);
+
+            $list = ["status" => "This status $status is invalid!"];
+            $msg  = ErrorMessage::getMessageToJson($list);
+
             throw new UnprocessableEntityHttpException($msg);
         }
-        $user->setEnable();
 
-        if ($status==="disable") {
-            $user->setDisable();
+        if (!$user->getId()) {
+            $list = ["user" => "User not defined!"];
+            $msg  = ErrorMessage::getMessageToJson($list);
+
+            throw new EntityNotFoundException($msg);
         }
+
+
+        $user->setAttribute('status', $status);
+        $user->updatedTime();
 
         $this->repository->save($user);
     }

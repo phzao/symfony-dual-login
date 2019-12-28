@@ -6,6 +6,7 @@ use App\Entity\ApiToken;
 use App\Entity\User;
 use App\Repository\Interfaces\ApiTokenRepositoryInterface;
 use App\Utils\HandleErrors\ErrorMessage;
+use Doctrine\ORM\EntityNotFoundException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
@@ -86,6 +87,11 @@ final class LoginService
      */
     public function getLogin(User $user): ?ApiToken
     {
+        if (!$user->getId()) {
+            $msg = ErrorMessage::getErrorMessage("A valid user is required!", "fail");
+            throw new EntityNotFoundException($msg);
+        }
+
         $token = $this->tokenRepository->getTheLastTokenByUser($user->getId());
 
         if ($token) {
@@ -94,6 +100,7 @@ final class LoginService
 
         $apiToken = new ApiToken();
         $apiToken->setUser($user);
+        $apiToken->generateUuid();
 
         $this->tokenRepository->save($apiToken);
 

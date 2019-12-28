@@ -27,4 +27,11 @@ interface UsuarioInterface extends UserInterface
     public function setEnable(): User;
 
     public function delete(): void;
+
+    /**
+     * @return string
+     */
+    public function getStatus(): string;
+
+    public function updatedTime(): void;
 }

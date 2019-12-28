@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Entity\Interfaces\ApiTokenInterface;
 use App\Entity\Traits\SimpleTime;
+use App\Entity\Traits\UuidControl;
 use Doctrine\ORM\Mapping as ORM;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -14,15 +15,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  */
 class ApiToken implements ApiTokenInterface
 {
-    use SimpleTime;
-
-    /**
-     * @var \Ramsey\Uuid\UuidInterface
-     *
-     * @ORM\Id()
-     * @ORM\Column(name="id", type="uuid", unique=true)
-     */
-    protected $id;
+    use SimpleTime, UuidControl;
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -54,8 +47,6 @@ class ApiToken implements ApiTokenInterface
     {
         $this->token     = bin2hex(random_bytes(60));
         $this->expire_at = new \DateTime('+24 hour');
-        $id              = Uuid::uuid4();
-        $this->id        = $id->toString();
     }
 
     /**
@@ -121,6 +112,4 @@ class ApiToken implements ApiTokenInterface
 
         return false;
     }
-
-
 }

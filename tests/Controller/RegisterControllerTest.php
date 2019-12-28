@@ -67,8 +67,6 @@ class RegisterControllerTest extends WebTestCase
             "password" => 123456
         ];
 
-        $now = new \DateTime('now');
-
         $this->client->request('POST', '/register', $user);
         $this->assertEquals(201, $this->client->getResponse()->getStatusCode());
 
@@ -86,7 +84,6 @@ class RegisterControllerTest extends WebTestCase
         $this->assertArrayHasKey("updated_at", $res["data"]);
         $this->assertArrayHasKey("status", $res["data"]);
         $this->assertArrayHasKey("status_description", $res["data"]);
-        $this->assertEquals($res["data"]["created_at"], $now->format('Y-m-d H:i:s'));
 
     }
 }

@@ -19,7 +19,7 @@ class UserTest extends TestCase
     {
         $user = new User();
 
-        $this->assertIsString($user->getId());
+        $this->assertNull($user->getId());
         $this->assertIsString($user->getUsername());
 
         $this->assertInstanceOf(UsuarioInterface::class, $user);
@@ -31,7 +31,7 @@ class UserTest extends TestCase
 
         $this->assertArrayHasKey('id', $loginData);
         $this->assertArrayHasKey('email', $loginData);
-        $this->assertIsString($loginData["id"]);
+        $this->assertNull($loginData["id"]);
         $this->assertNull($loginData["email"]);
         $this->assertIsArray($loginData);
         $this->assertCount(2, $loginData);
@@ -63,5 +63,8 @@ class UserTest extends TestCase
         $user->setAttributes($attributes);
         $this->assertEquals("12345", $user->getPassword());
         $this->assertEquals("me@me.com", $user->getUsername());
+
+        $user->generateUuid();
+        $this->assertIsString($user->getId());
     }
 }

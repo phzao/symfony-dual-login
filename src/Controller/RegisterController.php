@@ -58,7 +58,7 @@ class RegisterController extends APIController
             $validationService->validating($user);
 
             $user->encryptPassword($passwordEncoder);
-
+            $user->generateUuid();
             $this->repository->save($user);
 
             return $this->respondCreated($user->getFullData());
