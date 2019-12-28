@@ -85,5 +85,15 @@ class RegisterControllerTest extends WebTestCase
         $this->assertArrayHasKey("status", $res["data"]);
         $this->assertArrayHasKey("status_description", $res["data"]);
 
+        $this->client->request('POST', '/register', $user);
+        $this->assertEquals(405, $this->client->getResponse()->getStatusCode());
+
+        $res  = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertJson($this->client->getResponse()->getContent());
+        $this->assertArrayHasKey("status", $res);
+        $this->assertArrayHasKey("message", $res);
+        $this->assertCount(2, $res);
+        $this->assertEquals($res["status"], "error");
+        $this->assertEquals($res["message"], "Email already in use! Use another one!");
     }
 }

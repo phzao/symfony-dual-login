@@ -71,6 +71,31 @@ class APIController extends AbstractController
     }
 
     /**
+     * @param string $data
+     * @param array  $headers
+     *
+     * @return object|JsonResponse
+     */
+    public function respondNotAllowed(string $data, $headers = [])
+    {
+        return $this->errorMessage($data, $headers)
+            ->setStatusCode(405);
+    }
+
+    /**
+     * @param string $data
+     * @param array  $headers
+     *
+     * @return object|JsonResponse
+     */
+    public function respondBadRequest(string $data, $headers = [])
+    {
+        return $this->errorMessage($data, $headers)
+            ->setStatusCode(400);
+    }
+
+
+    /**
      * @param string $errors
      * @param array  $headers
      *

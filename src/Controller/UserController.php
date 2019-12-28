@@ -54,9 +54,7 @@ class UserController extends APIController
             return $this->respondNotFound($exception->getMessage());
         } catch (\Exception $exception) {
 
-            return $this
-                        ->errorMessage($exception->getMessage())
-                        ->setStatusCode(400);
+            return $this->respondBadRequest($exception->getMessage());
         }
     }
 
@@ -85,9 +83,7 @@ class UserController extends APIController
             return $this->respondNotFound($exception->getMessage());
         } catch (\Exception $exception) {
 
-            return $this
-                        ->errorMessage($exception->getMessage())
-                        ->setStatusCode(400);
+            return $this->respondBadRequest($exception->getMessage());
         }
     }
 
@@ -122,9 +118,7 @@ class UserController extends APIController
             return $this->respondNotFound($exception->getMessage());
         } catch (\Exception $exception) {
 
-            return $this
-                        ->errorMessage($exception->getMessage())
-                        ->setStatusCode(400);
+            return $this->respondBadRequest($exception->getMessage());
         }
     }
 
@@ -149,9 +143,7 @@ class UserController extends APIController
             return $this->respondNotFound($exception->getMessage());
         } catch (\Exception $exception) {
 
-            return $this
-                        ->errorMessage($exception->getMessage())
-                        ->setStatusCode(400);
+            return $this->respondBadRequest($exception->getMessage());
         }
     }
 }

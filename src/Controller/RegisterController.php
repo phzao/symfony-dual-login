@@ -66,7 +66,7 @@ class RegisterController extends APIController
         } catch(UniqueConstraintViolationException $PDOException){
             $msg = $PDOException->getMessage();
 
-            return $this->errorMessage($msg);
+            return $this->respondNotAllowed($msg);
         } catch (UnprocessableEntityHttpException $exception) {
 
             return $this->respondValidationError($exception->getMessage());
@@ -75,7 +75,7 @@ class RegisterController extends APIController
             return $this->respondNotFound($exception->getMessage());
         } catch (\Exception $exception) {
 
-            return $this->errorMessage($exception->getMessage());
+            return $this->respondBadRequest($exception->getMessage());
         }
     }
 
@@ -105,9 +105,9 @@ class RegisterController extends APIController
             return $this->respondCreated($loginData->getDetailsToken());
 
         } catch(UniqueConstraintViolationException $PDOException){
-            $msg = $PDOException->getMessage();
+//            $msg = $PDOException->getMessage();
 
-            return $this->errorMessage($msg);
+            return $this->respondNotAllowed("Email already in use! Use another one!");
         }  catch (UnprocessableEntityHttpException $exception) {
 
             return $this->respondValidationError($exception->getMessage());
@@ -119,7 +119,7 @@ class RegisterController extends APIController
             return $this->respondWithInvalidCredentials($exception->getMessage());
         } catch (\Exception $exception) {
 
-            return $this->errorMessage($exception->getMessage());
+            return $this->respondBadRequest($exception->getMessage());
         }
     }
 }
