@@ -66,7 +66,7 @@ class User extends ModelBase implements UsuarioInterface, ModelInterface, Simple
      * @var string The status user
      * @Assert\NotBlank(message="A status is required!")
      * @Assert\Choice({"enable", "disable", "blocked"})
-     * @ORM\Column(type="string", length=20)
+     * @ORM\Column(type="string", length=20, options={"default": "enable"})
      */
     protected $status = GeneralTypes::STATUS_ENABLE;
 
@@ -94,7 +94,7 @@ class User extends ModelBase implements UsuarioInterface, ModelInterface, Simple
     ];
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Entity\ApiToken", mappedBy="usuario", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="App\Entity\ApiToken", mappedBy="user", orphanRemoval=true)
      */
     private $apiTokens;
 
@@ -195,6 +195,7 @@ class User extends ModelBase implements UsuarioInterface, ModelInterface, Simple
             "id"                 => $this->id,
             "email"              => $this->email,
             "created_at"         => $this->getDateTimeStringFrom('created_at'),
+            "updated_at"         => $this->getDateTimeStringFrom('updated_at'),
             "status"             => $this->status,
             "status_description" => GeneralTypes::getStatusDescription($this->status)
         ];
@@ -217,7 +218,7 @@ class User extends ModelBase implements UsuarioInterface, ModelInterface, Simple
     {
         if (!$this->apiTokens->contains($apiToken)) {
             $this->apiTokens[] = $apiToken;
-            $apiToken->setUsuario($this);
+            $apiToken->setUser($this);
         }
 
         return $this;
@@ -233,8 +234,8 @@ class User extends ModelBase implements UsuarioInterface, ModelInterface, Simple
         if ($this->apiTokens->contains($apiToken)) {
             $this->apiTokens->removeElement($apiToken);
             // set the owning side to null (unless already changed)
-            if ($apiToken->getUsuario() === $this) {
-                $apiToken->setUsuario(null);
+            if ($apiToken->getUser() === $this) {
+                $apiToken->setUser(null);
             }
         }
 

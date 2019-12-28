@@ -44,7 +44,7 @@ class ApiToken implements ApiTokenInterface
      * @ORM\ManyToOne(targetEntity="App\Entity\User", inversedBy="apiTokens")
      * @ORM\JoinColumn(referencedColumnName="id" ,nullable=false)
      */
-    protected $usuario;
+    protected $user;
 
     /**
      * ApiToken constructor.
@@ -69,19 +69,19 @@ class ApiToken implements ApiTokenInterface
     /**
      * @return null|User
      */
-    public function getUsuario(): ?User
+    public function getUser(): ?User
     {
-        return $this->usuario;
+        return $this->user;
     }
 
     /**
-     * @param null|User $usuario
+     * @param null|User $user
      *
      * @return ApiToken
      */
-    public function setUsuario(?User $usuario)
+    public function setUser(?User $user)
     {
-        $this->usuario = $usuario;
+        $this->user = $user;
 
         return $this;
     }
@@ -91,12 +91,12 @@ class ApiToken implements ApiTokenInterface
      */
     public function getDetailsToken(): array
     {
-        $login = empty($this->usuario) ? null : $this->usuario->getLoginData();
+        $login = empty($this->user) ? null : $this->user->getLoginData();
 
         return [
             "id"        => $this->id,
             "token"     => $this->token,
-            "usuario"   => $login,
+            "user"      => $login,
             "expire_at" => $this->getDateTimeStringFrom("expire_at")
         ];
     }
@@ -114,7 +114,7 @@ class ApiToken implements ApiTokenInterface
         $now = new \DateTime("now");
 
         if ($now < $this->expire_at) {
-            return $this->usuario;
+            return $this->user;
         }
 
         $this->expired_at = new \DateTime("now");

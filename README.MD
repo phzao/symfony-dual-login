@@ -1,7 +1,7 @@
 # Login Authentication with Symfony 5 and Oauth2
 
 This repository is ideal for new projects to start with a login control. 
-To persist the data, PostgreSQL was used using Docker. This image can be found at [Postgresql-db](git@github.com:phzao/postgresql-db.git). 
+To persist the data, PostgreSQL was used using Docker. This image can be found at [Postgresql-db](https://github.com/phzao/postgresql-db.git). 
 If you want to use MySQL, you will need some changes to Dockerfile, feel free to change anything.
 
 ## Getting Started

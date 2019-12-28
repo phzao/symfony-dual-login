@@ -25,4 +25,4 @@ services:
 networks:
   my-net:
     external:
-      name: my_network
+      name: my_project

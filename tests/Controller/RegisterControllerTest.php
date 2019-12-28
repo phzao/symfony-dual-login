@@ -29,7 +29,8 @@ class RegisterControllerTest extends WebTestCase
             ["email" => "yourmail"],
             ["email" => "y@y.c"],
             ["email" => "me@me.com"],
-            ["password" => "12345"]
+            ["password" => "12345"],
+            ["email" => "y@y.camsmmsmsmsmmamamamamamamamcamsmmsmsmsmmamamamamamamamcamsmmsmsmsmmamamamamamamamcamsmmsmsmsmmamamamamamamamcamsmmsmsmsmmamamamamamamamcamsmmsmsmsmmamamamamamamamcamsmmsmsmsmmamamamamamamamcamsmmsmsmsmmamamamamamamamcamsmmsmsmsmmamamamamamamam"]
         ];
 
         $msgErrors = [
@@ -40,7 +41,8 @@ class RegisterControllerTest extends WebTestCase
             ["email" => "This value is not a valid email address."],
             ["email" => "Type must be at least 6 characters long"],
             ["password" => "A password is required!"],
-            ["password" => "This value should have exactly 6 characters."]
+            ["password" => "This value should have exactly 6 characters."],
+            ["email" => "Type cannot be longer than 180 characters"]
         ];
 
         foreach ($bodyError as $key => $body)
@@ -77,10 +79,11 @@ class RegisterControllerTest extends WebTestCase
         $this->assertCount(2, $res);
         $this->assertEquals($res["status"], "success");
 
-        $this->assertCount(5, $res["data"]);
+        $this->assertCount(6, $res["data"]);
         $this->assertArrayHasKey("id", $res["data"]);
         $this->assertArrayHasKey("email", $res["data"]);
         $this->assertArrayHasKey("created_at", $res["data"]);
+        $this->assertArrayHasKey("updated_at", $res["data"]);
         $this->assertArrayHasKey("status", $res["data"]);
         $this->assertArrayHasKey("status_description", $res["data"]);
         $this->assertEquals($res["data"]["created_at"], $now->format('Y-m-d H:i:s'));

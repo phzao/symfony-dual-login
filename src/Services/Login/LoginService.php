@@ -65,13 +65,13 @@ final class LoginService
     }
 
     /**
-     * @param        $usuario
+     * @param        $user
      * @param string $password
      */
-    public function isValidCredentials($usuario, string  $password)
+    public function isValidCredentials($user, string  $password)
     {
-        if ($usuario instanceof UserInterface &&
-            $this->passwordEncoder->isPasswordValid($usuario, $password)) {
+        if ($user instanceof UserInterface &&
+            $this->passwordEncoder->isPasswordValid($user, $password)) {
             return ;
         }
         $msg = ErrorMessage::getErrorMessage("A email or password is incorrect!", "fail");
@@ -93,7 +93,7 @@ final class LoginService
         }
 
         $apiToken = new ApiToken();
-        $apiToken->setUsuario($user);
+        $apiToken->setUser($user);
 
         $this->tokenRepository->save($apiToken);
 

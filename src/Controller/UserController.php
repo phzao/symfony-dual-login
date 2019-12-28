@@ -64,7 +64,7 @@ class UserController extends APIController
      * @Route("/{uuid}", methods={"DELETE"})
      * @param string $uuid
      *
-     * @return JsonResponse
+     * @return object|JsonResponse
      */
     public function delete(string $uuid)
     {

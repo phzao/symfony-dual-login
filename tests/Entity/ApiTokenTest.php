@@ -19,7 +19,7 @@ class ApiTokenTest extends TestCase
         $this->assertCount(4, $apiToken->getDetailsToken());
 
         $keys = array_keys($apiToken->getDetailsToken());
-        $this->assertEquals(["id", "token", "usuario", "expire_at"], $keys);
+        $this->assertEquals(["id", "token", "user", "expire_at"], $keys);
         $this->assertInstanceOf(\DateTimeInterface::class, $apiToken->getExpireAt());
         $this->assertIsArray($apiToken->getDetailsToken());
         $this->assertIsString($apiToken->getDateTimeStringFrom(''));

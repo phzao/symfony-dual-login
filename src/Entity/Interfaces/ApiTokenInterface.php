@@ -14,14 +14,14 @@ interface ApiTokenInterface
     /**
      * @return null|User
      */
-    public function getUsuario(): ?User ;
+    public function getUser(): ?User ;
 
     /**
-     * @param null|User $usuario
+     * @param null|User $user
      *
      * @return mixed
      */
-    public function setUsuario(?User $usuario);
+    public function setUser(?User $user);
 
     /**
      * @return null|UserInterface

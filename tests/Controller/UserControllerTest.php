@@ -12,6 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 class UserControllerTest extends WebTestCase
 {
     use Authenticate;
+
     /**
      * @var \Symfony\Bundle\FrameworkBundle\KernelBrowser
      */
@@ -90,7 +91,7 @@ class UserControllerTest extends WebTestCase
         $this->assertEquals("error", $data["status"]);
         $this->assertEquals("Could not convert database value \"491f6278-828e-4f5f-8...\" to Doctrine Type uuid", $data["message"]);
 
-        $this->client->request('GET', self::USER_ROUTE."/".$registerData["usuario"]["id"], [], [],
+        $this->client->request('GET', self::USER_ROUTE."/".$registerData["user"]["id"], [], [],
                                ["HTTP_X-AUTH-TOKEN" => $token]);
 
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
@@ -103,10 +104,10 @@ class UserControllerTest extends WebTestCase
         $this->assertArrayHasKey("data", $data);
         $this->assertEquals("success", $data["status"]);
         $this->assertCount(2, $data);
-        $this->assertCount(5, $data["data"]);
-        $this->assertEquals($registerData["usuario"]["id"], $data["data"]["id"]);
-        $this->assertEquals($registerData["usuario"]["email"], $data["data"]["email"]);
-        $this->assertEquals(["id", "email", "created_at", "status", "status_description"], array_keys($data["data"]));
+        $this->assertCount(6, $data["data"]);
+        $this->assertEquals($registerData["user"]["id"], $data["data"]["id"]);
+        $this->assertEquals($registerData["user"]["email"], $data["data"]["email"]);
+        $this->assertEquals(["id", "email", "created_at", "updated_at", "status", "status_description"], array_keys($data["data"]));
     }
 
     public function testEnableDisable()
@@ -119,11 +120,11 @@ class UserControllerTest extends WebTestCase
         $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
         $this->assertJson($this->client->getResponse()->getContent());
 
-        $this->client->request('PUT', self::USER_ROUTE."/".$registerData["usuario"]["id"]."/enable", [], [],
+        $this->client->request('PUT', self::USER_ROUTE."/".$registerData["user"]["id"]."/enable", [], [],
                                ["HTTP_X-AUTH-TOKEN" => $token]);
         $this->assertEquals(204, $this->client->getResponse()->getStatusCode());
 
-        $this->client->request('PUT', self::USER_ROUTE."/".$registerData["usuario"]["id"]."/disable", [], [],
+        $this->client->request('PUT', self::USER_ROUTE."/".$registerData["user"]["id"]."/disable", [], [],
                                ["HTTP_X-AUTH-TOKEN" => $token]);
         $this->assertEquals(204, $this->client->getResponse()->getStatusCode());
     }

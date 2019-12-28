@@ -13,7 +13,7 @@ interface ApiTokenRepositoryInterface extends BaseRepositoryInterface
     /**
      * @param string $user_id
      *
-     * @return mixed|ApiToken
+     * @return null|ApiToken
      */
     public function getTheLastTokenByUser(string $user_id): ?ApiToken;
 }

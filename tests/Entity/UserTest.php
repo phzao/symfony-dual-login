@@ -44,9 +44,9 @@ class UserTest extends TestCase
 
         $keys = array_keys($userData);
 
-        $this->assertEquals(["id", "email", "created_at", "status", "status_description"], $keys);
+        $this->assertEquals(["id", "email", "created_at", "updated_at", "status", "status_description"], $keys);
         $this->assertEmpty($user->getApiTokens());
-        $this->assertCount(5, $userData);
+        $this->assertCount(6, $userData);
         $this->assertNull($userData["email"]);
         $this->assertIsObject($user->getApiTokens());
 

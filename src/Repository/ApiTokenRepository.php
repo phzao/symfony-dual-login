@@ -50,10 +50,10 @@ class ApiTokenRepository extends BaseRepository implements ApiTokenRepositoryInt
     /**
      * @param string $user_id
      *
-     * @return ApiToken|mixed
+     * @return mixed|ApiToken
      */
     public function getTheLastTokenByUser(string $user_id): ?ApiToken
     {
-        return $this->objectRepository->findOneBy(["usuario" => $user_id, "expired_at" => null]);
+        return $this->objectRepository->findOneBy(["user" => $user_id, "expired_at" => null]);
     }
 }
