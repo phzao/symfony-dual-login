@@ -39,10 +39,10 @@ class RegisterControllerTest extends WebTestCase
                 "password" => "A password is required!"
             ],
             ["email" => "This value is not a valid email address."],
-            ["email" => "Type must be at least 6 characters long"],
+            ["email" => "Email must be at least 6 characters long"],
             ["password" => "A password is required!"],
             ["password" => "This value should have exactly 6 characters."],
-            ["email" => "Type cannot be longer than 180 characters"]
+            ["email" => "Email cannot be longer than 180 characters"]
         ];
 
         foreach ($bodyError as $key => $body)

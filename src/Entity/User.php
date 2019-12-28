@@ -30,8 +30,8 @@ class User extends ModelBase implements UsuarioInterface, ModelInterface, Simple
      * @Assert\Length(
      *      min = 6,
      *      max = 180,
-     *      minMessage = "Type must be at least {{ limit }} characters long",
-     *      maxMessage = "Type cannot be longer than {{ limit }} characters"
+     *      minMessage = "Email must be at least {{ limit }} characters long",
+     *      maxMessage = "Email cannot be longer than {{ limit }} characters"
      * )
      * @ORM\Column(type="string", length=180, unique=true)
      */
