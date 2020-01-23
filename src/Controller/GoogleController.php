@@ -42,7 +42,7 @@ class GoogleController extends APIController
         }
 
         $user      = $this->getUser();
-        $loginData = $loginService->getLogin($user);
+        $loginData = $loginService->getLoginOrFail($user);
 
         return $this->respond($loginData->getDetailsToken());
     }

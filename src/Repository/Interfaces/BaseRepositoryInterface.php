@@ -3,14 +3,15 @@
 namespace App\Repository\Interfaces;
 
 /**
- * Interface BaseRepositoryInterface
  * @package App\Repository\Interfaces
  */
 interface BaseRepositoryInterface
 {
-    /**
-     * @param $entity
-     * @return mixed
-     */
     public function save($entity);
+
+    public function getAllBy(array $data): ?array;
+
+    public function getOneBy(array $array);
+
+    public function remove($entity);
 }

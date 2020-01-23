@@ -6,30 +6,13 @@ use App\Entity\User;
 use App\Repository\Interfaces\UserRepositoryInterface;
 use App\Utils\Enums\GeneralTypes;
 use Doctrine\ORM\Query;
-use Doctrine\Persistence\ObjectRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * Class UserRepository
  * @package App\Repository
  */
 class UserRepository extends BaseRepository implements UserRepositoryInterface
 {
-    /**
-     * @var ObjectRepository
-     */
-    protected $objectRepository;
-
-    /**
-     * @var \Doctrine\DBAL\Connection
-     */
-    private $conn;
-
-    /**
-     * UserRepository constructor.
-     *
-     * @param EntityManagerInterface $entityManager
-     */
     public function __construct(EntityManagerInterface $entityManager)
     {
         $this->entityManager    = $entityManager;
@@ -38,51 +21,47 @@ class UserRepository extends BaseRepository implements UserRepositoryInterface
                                        ->getRepository(User::class);
     }
 
-    /**
-     * @param $entity
-     *
-     * @return mixed|void
-     */
     public function save($entity)
     {
         parent::save($entity);
     }
 
     /**
-     * @param string $email
-     *
-     * @return User|mixed
+     * @return mixed|User
      */
-    public function getByEmail(string $email): ?User
+    public function getOneUserByEmailAndStatusEnable(string $email): ?User
     {
         $parameters = [
-            'email'  => $email,
-            'status' => GeneralTypes::STATUS_ENABLE
-        ];
-        return $this->objectRepository->findOneBy($parameters);
-    }
-
-    /**
-     * @param string $id
-     *
-     * @return User|mixed
-     */
-    public function getByID(string $id): ? User
-    {
-        $parameters = [
-            'id'     => $id,
+            'email' => $email,
             'status' => GeneralTypes::STATUS_ENABLE
         ];
 
-        return $this->objectRepository->findOneBy($parameters);
+        return $this->getOneBy($parameters);
     }
 
     /**
-     * @param array $parameters
-     *
-     * @return array
+     * @return mixed|User
      */
-    public function getList(array $parameters = []): array
+    public function getOneUserByEmail(string $email): ?User
+    {
+        $parameters = [
+            'email' => $email
+        ];
+
+        return $this->getOneBy($parameters);
+    }
+
+    public function getOneByID(string $id)
+    {
+        $parameters = [
+            'id' => $id,
+            'status' => GeneralTypes::STATUS_ENABLE
+        ];
+
+        return $this->getOneBy($parameters);
+    }
+
+    public function getListOfUsersByStatusEnableAndASC(): array
     {
         $res = $this
                     ->entityManager

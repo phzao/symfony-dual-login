@@ -8,7 +8,6 @@ use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
- * Class ValidationService
  * @package App\Services\Validation
  */
 class ValidationService implements ValidateModelInterface
@@ -17,21 +16,13 @@ class ValidationService implements ValidateModelInterface
      * @var ValidatorInterface
      */
     private $validator;
-    /**
-     * ValidationService constructor.
-     *
-     * @param ValidatorInterface $validator
-     */
+
     public function __construct(ValidatorInterface $validator)
     {
         $this->validator = $validator;
     }
-    /**
-     * @param $model
-     *
-     * @return void|string
-     */
-    public function validating($model)
+
+    public function entityIsValidOrFail($model)
     {
         $errors = $this->validator->validate($model);
 
@@ -43,16 +34,16 @@ class ValidationService implements ValidateModelInterface
             return;
         }
 
-        $list = [];
+        $errorList = [];
 
         foreach($errors->getIterator() as $error)
         {
-            $attribute    = $error->getPropertyPath();
+            $incorrectAttribute = $error->getPropertyPath();
             $messageError = $error->getMessage();
-            $list[$attribute] = $messageError;
+            $errorList[$incorrectAttribute] = $messageError;
         }
 
-        $msg = ErrorMessage::getMessageToJson($list);
+        $msg = ErrorMessage::getArrayMessageToJson($errorList);
 
         throw new UnprocessableEntityHttpException($msg);
     }

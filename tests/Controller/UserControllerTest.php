@@ -6,7 +6,6 @@ use App\Tests\Authenticate;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
- * Class UserControllerTest
  * @package App\Tests\Controller
  */
 class UserControllerTest extends WebTestCase
@@ -27,105 +26,132 @@ class UserControllerTest extends WebTestCase
         $this->client = static::createClient();
     }
 
-    public function testListForbidden()
+    public function testShowDetailsUserNotAuthenticateShouldFail()
     {
-        $this->client->request('GET', self::USER_ROUTE);
+        $this->client->request('GET', self::USER_ROUTE."/me");
 
         $this->assertEquals(401, $this->client->getResponse()->getStatusCode());
     }
 
-    public function testList()
+    public function testShowDetailsUserAuthenticateSuccess()
     {
-        $this->client->request('GET', self::USER_ROUTE);
+        $result = $this->getTokenAuthenticate();
 
-        $this->assertEquals(401, $this->client->getResponse()->getStatusCode());
-
-        $registerData = $this->getTokenAuthenticate();
-        $token        = $registerData["token"];
-
-        $this->client->request('GET', self::USER_ROUTE,[],[],
-                               ["HTTP_X-AUTH-TOKEN" => $token]);
-
+        $this->client->request('GET', self::USER_ROUTE."/me", [],[], ["HTTP_Authorization" => $result["token"]]);
         $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
 
-        $res    = $this->client->getResponse()->getContent();
-        $result = json_decode($res, true);
+        $resultExpected = [
+            "status" => "success",
+            "data" => $this->registeredData
+        ];
 
-        $this->assertCount(2, $result);
-        $this->assertEquals('success', $result["status"]);
-        $this->assertCount(1, $result["data"]);
+        $this->assertJsonStringEqualsJsonString(json_encode($resultExpected), $this->client->getResponse()->getContent());
     }
 
-    public function testShow()
+    public function testUserBlockedTryToSeeDetailsShouldFail()
     {
-        $registerData = $this->getTokenAuthenticate();
-        $token        = $registerData["token"];
+        $result = $this->getTokenAuthenticate();
 
-        $this->client->request('GET', self::USER_ROUTE."/491f6278-828e-4f5f-8a48-e11ea346902a", [], [],
-                               ["HTTP_X-AUTH-TOKEN" => $token]);
+        $this->client->request('PUT', self::USER_ROUTE.'/my-status-to/blocked', [],[], ["HTTP_Authorization" => $result["token"]]);
+        $this->assertResponseStatusCodeSame(204);
 
-        $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
-        $res = $this->client->getResponse()->getContent();
-        $this->assertJson($res);
+        $this->client->request('GET', self::USER_ROUTE.'/me', [],[], ["HTTP_Authorization" => $result["token"]]);
+        $this->assertResponseStatusCodeSame(403);
 
-        $data = json_decode($res, true);
-
-        $this->assertCount(2, $data);
-        $this->assertArrayHasKey("status", $data);
-        $this->assertArrayHasKey("message", $data);
-        $this->assertEquals("error", $data["status"]);
-        $this->assertEquals("There is no user with this id 491f6278-828e-4f5f-8a48-e11ea346902a", $data["message"]);
-
-        $this->client->request('GET', self::USER_ROUTE."/491f6278-828e-4f5f-8a48-e11ea346902", [], [],
-                               ["HTTP_X-AUTH-TOKEN" => $token]);
-
-        $this->assertEquals(400, $this->client->getResponse()->getStatusCode());
-        $res = $this->client->getResponse()->getContent();
-        $this->assertJson($res);
-
-        $data = json_decode($res, true);
-
-        $this->assertCount(2, $data);
-        $this->assertArrayHasKey("status", $data);
-        $this->assertArrayHasKey("message", $data);
-        $this->assertEquals("error", $data["status"]);
-        $this->assertEquals("Could not convert database value \"491f6278-828e-4f5f-8...\" to Doctrine Type uuid", $data["message"]);
-
-        $this->client->request('GET', self::USER_ROUTE."/".$registerData["user"]["id"], [], [],
-                               ["HTTP_X-AUTH-TOKEN" => $token]);
-
-        $this->assertEquals(200, $this->client->getResponse()->getStatusCode());
-        $res = $this->client->getResponse()->getContent();
-        $this->assertJson($res);
-
-        $data = json_decode($res, true);
-
-        $this->assertArrayHasKey("status", $data);
-        $this->assertArrayHasKey("data", $data);
-        $this->assertEquals("success", $data["status"]);
-        $this->assertCount(2, $data);
-        $this->assertCount(6, $data["data"]);
-        $this->assertEquals($registerData["user"]["id"], $data["data"]["id"]);
-        $this->assertEquals($registerData["user"]["email"], $data["data"]["email"]);
-        $this->assertEquals(["id", "email", "created_at", "updated_at", "status", "status_description"], array_keys($data["data"]));
+        $this->assertJsonStringEqualsJsonString('{"message": "User cannot authenticate!"}', $this->client->getResponse()->getContent());
     }
 
-    public function testEnableDisable()
+    public function testUserDisableTryToSeeDetailsShouldFail()
     {
-        $registerData = $this->getTokenAuthenticate();
-        $token        = $registerData["token"];
+        $result = $this->getTokenAuthenticate();
 
-        $this->client->request('PUT', self::USER_ROUTE."/491f6278-828e-4f5f-8a48-e11ea346902b/enable", [], [],
-                               ["HTTP_X-AUTH-TOKEN" => $token]);
-        $this->assertEquals(404, $this->client->getResponse()->getStatusCode());
-        $this->assertJson($this->client->getResponse()->getContent());
+        $this->client->request('PUT', self::USER_ROUTE.'/my-status-to/disable', [],[], ["HTTP_Authorization" => $result["token"]]);
+        $this->assertResponseStatusCodeSame(204);
 
-        $this->client->request('PUT', self::USER_ROUTE."/".$registerData["user"]["id"]."/enable", [], [],
-                               ["HTTP_X-AUTH-TOKEN" => $token]);
-        $this->assertEquals(204, $this->client->getResponse()->getStatusCode());
+        $this->client->request('GET', self::USER_ROUTE.'/me', [],[], ["HTTP_Authorization" => $result["token"]]);
+        $this->assertResponseStatusCodeSame(403);
 
-        $this->client->request('PUT', self::USER_ROUTE."/".$registerData["user"]["id"]."/disable", [], [],
-                               ["HTTP_X-AUTH-TOKEN" => $token]);
-        $this->assertEquals(204, $this->client->getResponse()->getStatusCode());
+        $this->assertJsonStringEqualsJsonString('{"message": "User cannot authenticate!"}', $this->client->getResponse()->getContent());
+    }
+
+    public function testUserEnabledChangeStatusToDisableShouldSuccess()
+    {
+        $result = $this->getTokenAuthenticate();
+
+        $this->client->request('PUT', self::USER_ROUTE.'/my-status-to/disable', [],[], ["HTTP_Authorization" => $result["token"]]);
+        $this->assertResponseStatusCodeSame(204);
+    }
+
+    public function testUserEnabledChangeStatusToBlockedShouldSuccess()
+    {
+        $result = $this->getTokenAuthenticate();
+
+        $this->client->request('PUT', self::USER_ROUTE.'/my-status-to/blocked', [],[], ["HTTP_Authorization" => $result["token"]]);
+        $this->assertResponseStatusCodeSame(204);
+    }
+
+    public function testUserEnabledChangeStatusToInvalidShouldFail()
+    {
+        $result = $this->getTokenAuthenticate();
+
+        $this->client->request('PUT', self::USER_ROUTE.'/my-status-to/blocking', [],[], ["HTTP_Authorization" => $result["token"]]);
+        $this->assertResponseStatusCodeSame(422);
+        $this->assertJsonStringEqualsJsonString('{
+                                                                  "status": "fail",
+                                                                  "data": {
+                                                                    "status": "This status blocking is invalid!"
+                                                                  }
+                                                                }', $this->client->getResponse()->getContent());
+    }
+
+    public function testUserDisableChangeStatusToBlockedShouldFail()
+    {
+        $result = $this->getTokenAuthenticate();
+        $this->client->request('PUT', self::USER_ROUTE.'/my-status-to/disable', [],[], ["HTTP_Authorization" => $result["token"]]);
+        $this->assertResponseStatusCodeSame(204);
+
+        $this->client->request('PUT', self::USER_ROUTE.'/my-status-to/blocked', [],[], ["HTTP_Authorization" => $result["token"]]);
+        $this->assertResponseStatusCodeSame(403);
+
+        $this->assertJsonStringEqualsJsonString('{"message": "User cannot authenticate!"}', $this->client->getResponse()->getContent());
+    }
+
+    public function testUserDisableChangeStatusToEnableShouldFail()
+    {
+        $result = $this->getTokenAuthenticate();
+
+        $this->client->request('PUT', self::USER_ROUTE.'/my-status-to/disable', [],[], ["HTTP_Authorization" => $result["token"]]);
+        $this->assertResponseStatusCodeSame(204);
+
+        $this->client->request('PUT', self::USER_ROUTE.'/my-status-to/enable', [],[], ["HTTP_Authorization" => $result["token"]]);
+        $this->assertResponseStatusCodeSame(403);
+
+        $this->assertJsonStringEqualsJsonString('{"message": "User cannot authenticate!"}', $this->client->getResponse()->getContent());
+    }
+
+    public function testUserBlockedChangeStatusToEnableShouldFail()
+    {
+        $result = $this->getTokenAuthenticate();
+
+        $this->client->request('PUT', self::USER_ROUTE.'/my-status-to/blocked', [],[], ["HTTP_Authorization" => $result["token"]]);
+        $this->assertResponseStatusCodeSame(204);
+
+        $this->client->request('PUT', self::USER_ROUTE.'/my-status-to/enable', [],[], ["HTTP_Authorization" => $result["token"]]);
+        $this->assertResponseStatusCodeSame(403);
+
+        $this->assertJsonStringEqualsJsonString('{"message": "User cannot authenticate!"}', $this->client->getResponse()->getContent());
+    }
+
+    public function testUserBlockedChangeStatusToDisableShouldFail()
+    {
+        $result = $this->getTokenAuthenticate();
+
+        $this->client->request('PUT', self::USER_ROUTE.'/my-status-to/blocked', [],[], ["HTTP_Authorization" => $result["token"]]);
+        $this->assertResponseStatusCodeSame(204);
+
+        $this->client->request('PUT', self::USER_ROUTE.'/my-status-to/disable', [],[], ["HTTP_Authorization" => $result["token"]]);
+        $this->assertResponseStatusCodeSame(403);
+
+        $this->assertJsonStringEqualsJsonString('{"message": "User cannot authenticate!"}', $this->client->getResponse()->getContent());
     }
 }

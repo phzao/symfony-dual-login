@@ -2,10 +2,8 @@
 
 namespace App\Security;
 
-use App\Entity\ApiToken;
-use App\Entity\Interfaces\ApiTokenInterface;
-use App\Entity\User;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Repository\Interfaces\ApiTokenRepositoryInterface;
+use App\Utils\Datetime\Interfaces\DatetimeCheckServiceInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,26 +14,22 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Guard\AbstractGuardAuthenticator;
 
 /**
- * Class TokenAuthenticator
  * @package App\Security
  */
 class TokenAuthenticator extends AbstractGuardAuthenticator
 {
-    /**
-     * @var EntityManagerInterface
-     */
-    private $em;
+    private $tokenRepository;
 
-    private $expired = false;
+    private $datetimeCheck;
 
-    /**
-     * TokenAuthenticator constructor.
-     *
-     * @param EntityManagerInterface $em
-     */
-    public function __construct(EntityManagerInterface $em)
+    private $msg;
+
+    public function __construct(ApiTokenRepositoryInterface $tokenRepository,
+                                DatetimeCheckServiceInterface $datetimeCheckService)
     {
-        $this->em = $em;
+        $this->tokenRepository = $tokenRepository;
+        $this->datetimeCheck = $datetimeCheckService;
+        $this->msg = "This token is invalid!";
     }
 
     /**
@@ -45,7 +39,7 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
      */
     public function supports(Request $request)
     {
-        return $request->headers->has('X-AUTH-TOKEN');
+        return $request->headers->has('Authorization');
     }
 
     /**
@@ -55,15 +49,17 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
     public function getCredentials(Request $request)
     {
         return [
-            'token' => $request->headers->get('X-AUTH-TOKEN'),
+            'token' => $request->headers->get('Authorization'),
         ];
     }
 
+    private function setMessageError(string $string)
+    {
+        $this->msg = $string;
+    }
+
     /**
-     * @param mixed                 $credentials
-     * @param UserProviderInterface $userProvider
-     *
-     * @return void|UserInterface|User
+     * @throws \Exception
      */
     public function getUser($credentials, UserProviderInterface $userProvider)
     {
@@ -73,32 +69,30 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
             return;
         }
 
-        /**
-         * @var ApiTokenInterface
-         */
-        $apiToken = $this->em
-                        ->getRepository(ApiToken::class)
-                        ->findOneBy(['token' => $apiToken, 'expired_at' => null]);
-
-        if (!$apiToken) {
+        if (!$apiToken = $this->tokenRepository->getOneByTokenAndNotExpired($apiToken)) {
             return;
         }
 
-        if ($user = $apiToken->isValidToken()) {
+        $user = $apiToken->getUser();
+
+        if (!$user->canAuthenticate()) {
+            $this->setMessageError("User cannot authenticate!");
+            return;
+        }
+
+        $expired_date = $apiToken->getExpireAt();
+
+        if ($this->datetimeCheck->thisDatetimeIsGreaterThanNow($expired_date)) {
             return $user;
         }
 
-        $this->em->flush();
+        $apiToken->invalidateToken();
+        $this->tokenRepository->save($apiToken);
+        $this->setMessageError("Token expired!");
 
         return ;
     }
 
-    /**
-     * @param mixed         $credentials
-     * @param UserInterface $user
-     *
-     * @return bool
-     */
     public function checkCredentials($credentials, UserInterface $user)
     {
         // check credentials - e.g. make sure the password is valid
@@ -108,40 +102,23 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
         return true;
     }
 
-    /**
-     * @param Request        $request
-     * @param TokenInterface $token
-     * @param string         $providerKey
-     *
-     * @return null|Response
-     */
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, $providerKey)
     {
         // on success, let the request continue
         return null;
     }
 
-    /**
-     * @param Request                 $request
-     * @param AuthenticationException $exception
-     *
-     * @return null|JsonResponse|Response
-     */
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception)
     {
-        $data = [
-//            'message' => strtr($exception->getMessageKey(), $exception->getMessageData())
-            'message' => "This token is invalid!"
-            // or to translate this message
-            // $this->translator->trans($exception->getMessageKey(), $exception->getMessageData())
-        ];
+//        $data = [
+////            'message' => strtr($exception->getMessageKey(), $exception->getMessageData())
+//            // or to translate this message
+//            // $this->translator->trans($exception->getMessageKey(), $exception->getMessageData())
+//        ];
 
 
-        if ($this->expired) {
-            $data = ["message" => "Token expired!"];
-        }
-
-        return new JsonResponse($data, Response::HTTP_FORBIDDEN);
+        return new JsonResponse(["message" => $this->msg],
+                                Response::HTTP_FORBIDDEN);
     }
 
     /**
@@ -157,9 +134,6 @@ class TokenAuthenticator extends AbstractGuardAuthenticator
         return new JsonResponse($data, Response::HTTP_UNAUTHORIZED);
     }
 
-    /**
-     * @return bool
-     */
     public function supportsRememberMe()
     {
         return false;

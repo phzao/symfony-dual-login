@@ -20,6 +20,6 @@ class ValidationServiceTest extends WebTestCase
         $validationService = $this->getValidationService();
 
         $this->expectException(UnprocessableEntityHttpException::class);
-        $validationService->validating($user);
+        $validationService->entityIsValidOrFail($user);
     }
 }

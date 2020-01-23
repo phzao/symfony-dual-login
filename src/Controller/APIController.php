@@ -2,189 +2,148 @@
 
 namespace App\Controller;
 
+use App\Services\Log\Interfaces\LoggerServiceInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Class APIController
  * @package App\Controller
  */
 class APIController extends AbstractController
 {
+    protected $statusCode = Response::HTTP_OK;
+
+    protected $statusType = 'success';
+
+    protected $responseMessage = [];
+
     /**
-     * @var integer HTTP status code - 200 (OK) by default
+     * @var LoggerServiceInterface
      */
-    protected $statusCode = 200;
-    /**
-     * Gets the value of statusCode.
-     *
-     * @return integer
-     */
-    public function getStatusCode()
+    protected $logger;
+
+    public function __construct(LoggerServiceInterface $loggerService)
+    {
+        $this->logger = $loggerService;
+    }
+
+    public function getStatusCode(): int
     {
         return $this->statusCode;
     }
-    /**
-     * Sets the value of statusCode.
-     *
-     * @param integer $statusCode the status code
-     *
-     * @return self
-     */
-    protected function setStatusCode($statusCode)
+
+    protected function setStatusCode(int $statusCode)
     {
         $this->statusCode = $statusCode;
+
         return $this;
     }
-    /**
-     * @param       $data
-     * @param array $headers
-     *
-     * @return JsonResponse
-     */
-    public function respond($data, $headers = [])
+
+    protected function setStatusType(string $statusType)
     {
-        $response = [
-            'status' => 'success',
-            'data'   => $data
-        ];
-        return new JsonResponse($response,
-            $this->statusCode,
-            $headers);
+        $this->statusType = $statusType;
+
+        return $this;
     }
 
-    /**
-     * @param string $data
-     * @param array  $headers
-     *
-     * @return JsonResponse
-     */
-    public function errorMessage(string $data, $headers = [])
+    private function setArrayResponse($data, string $namePayload = 'data')
     {
-        $response = [
-            'status'  => 'error',
-            'message' => $data
+        $this->responseMessage = [
+            'status' => $this->statusType,
+            $namePayload => $data
         ];
-        return new JsonResponse($response,
+
+        return $this;
+    }
+
+    public function respond($headers = [])
+    {
+        return new JsonResponse($this->responseMessage,
                                 $this->statusCode,
                                 $headers);
     }
 
-    /**
-     * @param string $data
-     * @param array  $headers
-     *
-     * @return object|JsonResponse
-     */
-    public function respondNotAllowed(string $data, $headers = [])
+    public function respondSuccess($data, $headers = [])
     {
-        return $this->errorMessage($data, $headers)
-            ->setStatusCode(405);
+        return $this->setArrayResponse($data)
+                    ->respond($headers);
     }
 
-    /**
-     * @param string $data
-     * @param array  $headers
-     *
-     * @return object|JsonResponse
-     */
-    public function respondBadRequest(string $data, $headers = [])
+    public function respondValidationCustomFail(string $message)
     {
-        return $this->errorMessage($data, $headers)
-            ->setStatusCode(400);
+        return $this->setStatusType('fail')
+                    ->setArrayResponse($message, 'message')
+                    ->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY)
+                    ->respond();
     }
 
-
-    /**
-     * @param string $errors
-     * @param array  $headers
-     *
-     * @return JsonResponse
-     */
-    public function respondWithErrors(string $errors, $headers = [])
+    public function respondValidationFail(string $message)
     {
-        $errors = json_decode($errors, true);
-        return new JsonResponse($errors, $this->statusCode, $headers);
+        $errors   = json_decode($message, true);
+
+        return $this->setStatusType('fail')
+                    ->setArrayResponse($errors, 'data')
+                    ->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY)
+                    ->respond();
     }
 
-    /**
-     * @param string $errors
-     * @param array  $headers
-     *
-     * @return JsonResponse
-     */
-    public function respondWithInvalidCredentials(string $errors, $headers = [])
+    public function respondCreated($data, $headers = [])
     {
-        $errors = json_decode($errors, true);
-        return new JsonResponse($errors, 401, $headers);
-    }
-
-    /**
-     * @param string $error
-     * @param array $headers
-     * @return JsonResponse
-     */
-    public function respondWithErrorSimple(string $error, $headers = [])
-    {
-        return new JsonResponse(["status" => "fail", "data" => $error], $this->statusCode, $headers);
-    }
-
-    /**
-     * @param string $message
-     *
-     * @return JsonResponse
-     */
-    public function respondValidationError(string $message)
-    {
-        $errors          = json_decode($message, true);
-        $error['status'] = 'fail';
-        $error['data']   = $errors;
-        $jsonMessage     = json_encode($error, true);
-
         return $this
-                    ->setStatusCode(422)
-                    ->respondWithErrors($jsonMessage);
+                    ->setStatusCode(Response::HTTP_CREATED)
+                    ->setArrayResponse($data)
+                    ->respond($headers);
     }
-    /**
-     * @return JsonResponse
-     */
+
     public function respondUpdatedResource()
     {
-        return $this
-                    ->setStatusCode(204)
-                    ->respond([]);
+        return $this->setStatusCode(Response::HTTP_NO_CONTENT)
+                    ->respond();
     }
 
-    /**
-     * @return JsonResponse
-     */
-    public function respondNotAuthorized()
+    public function respondNotAllowedError(string $data, $headers = [])
     {
-        return $this
-                    ->setStatusCode(401)
-                    ->respond([]);
+        return $this->setStatusType('error')
+                    ->setArrayResponse($data, 'message')
+                    ->setStatusCode(Response::HTTP_METHOD_NOT_ALLOWED)
+                    ->respond($headers);
+
     }
 
-    /**
-     * @param array $data
-     *
-     * @return JsonResponse
-     */
-    public function respondCreated($data = [])
+    public function respondBadRequestError(string $data, $headers = [])
     {
-        return $this
-                    ->setStatusCode(201)
-                    ->respond($data);
+        return $this->setStatusType('error')
+                    ->setArrayResponse($data, 'message')
+                    ->setStatusCode(Response::HTTP_BAD_REQUEST)
+                    ->respond($headers);
     }
-    /**
-     * @param string $message
-     *
-     * @return JsonResponse
-     */
-    public function respondNotFound($message = 'Not found!')
+
+    public function respondNotFoundError($message = 'Not found!')
     {
         return $this
-                    ->setStatusCode(404)
-                    ->errorMessage($message);
+                    ->setStatusType('error')
+                    ->setStatusCode(Response::HTTP_NOT_FOUND)
+                    ->setArrayResponse($message, 'message')
+                    ->respond();
+    }
+
+    public function respondInvalidCredentialsFail(string $message, $headers = [])
+    {
+
+        return $this
+                    ->setStatusType('fail')
+                    ->setStatusCode(Response::HTTP_UNAUTHORIZED)
+                    ->setArrayResponse($message, 'message')
+                    ->respond($headers);
+    }
+
+    public function respondForbiddenFail(string $message, $headers = [])
+    {
+        return $this
+            ->setStatusType('fail')
+            ->setStatusCode(Response::HTTP_FORBIDDEN)
+            ->setArrayResponse($message, 'message')
+            ->respond($headers);
     }
 }

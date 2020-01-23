@@ -2,20 +2,25 @@
 
 namespace App\Entity;
 
+use Doctrine\ORM\Mapping as ORM;
+
 /**
- * Class ModelBase
  * @package App\Entity
  */
 class ModelBase
 {
-    /**
-     * @var array
-     */
-    protected  $attributes = [];
+    protected $attributes = [];
 
     /**
-     * @param array $values
+     * @ORM\Column(type="datetime", nullable=true)
      */
+    protected $updated_at;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    protected $deleted_at;
+
     public function setAttributes(array $values): void
     {
         if (empty($values) ||
@@ -38,20 +43,31 @@ class ModelBase
         }
     }
 
-    /**
-     * @param string $key
-     * @param        $value
-     */
     public function setAttribute(string $key, $value): void
     {
         $this->$key = $value;
     }
 
-    /**
-     * @return array
-     */
     public function getFullData(): array
     {
         return [];
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function updateLastUpdated(): void
+    {
+        $this->updated_at = new \DateTime('now');
+    }
+
+    public function remove(): void
+    {
+        $this->deleted_at = new \DateTime('now');
+    }
+
+    public function getDeletedAt(): ?\DateTime
+    {
+        return $this->deleted_at;
     }
 }

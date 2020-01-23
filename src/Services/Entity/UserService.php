@@ -9,36 +9,26 @@ use App\Utils\Enums\GeneralTypes;
 use App\Utils\HandleErrors\ErrorMessage;
 use Doctrine\ORM\EntityNotFoundException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 /**
- * Class UserService
  * @package App\Services\Entity
  */
-class UserService implements UserServiceInterface
+final class UserService implements UserServiceInterface
 {
     /**
      * @var UserRepositoryInterface
      */
     private $repository;
 
-    /**
-     * UserService constructor.
-     *
-     * @param UserRepositoryInterface $userRepository
-     */
     public function __construct(UserRepositoryInterface $userRepository)
     {
         $this->repository = $userRepository;
     }
 
     /**
-     * @param array $data
-     *
-     * @return User|mixed
      * @throws \Exception
      */
-    public function register(array $data)
+    public function register(array $data): User
     {
         $user = new User();
         $user->setAttributes($data);
@@ -46,66 +36,44 @@ class UserService implements UserServiceInterface
         if (empty($data["password"])) {
             $user->setPassword(rand(1000, 9999));
         }
-        $user->generateUuid();
+
         $this->repository->save($user);
 
         return $user;
     }
 
-    /**
-     * @param User   $user
-     * @param string $status
-     *
-     * @return mixed|void
-     * @throws EntityNotFoundException
-     */
-    public function updateStatus(User $user, string $status)
+    public function updateStatus($user, string $status)
     {
-        $status_list = GeneralTypes::STATUS_LIST;
-
-        if (!in_array($status, $status_list)) {
-
-            $list = ["status" => "This status $status is invalid!"];
-            $msg  = ErrorMessage::getMessageToJson($list);
-
-            throw new UnprocessableEntityHttpException($msg);
-        }
-
-        if (!$user->getId()) {
-            $list = ["user" => "User not defined!"];
-            $msg  = ErrorMessage::getMessageToJson($list);
-
-            throw new EntityNotFoundException($msg);
-        }
-
-
         $user->setAttribute('status', $status);
-        $user->updatedTime();
 
         $this->repository->save($user);
     }
 
-    /**
-     * @param string $email
-     *
-     * @return null|User
-     */
     public function getUserByEmail(string $email): ? User
     {
-        return $this->repository->getByEmail($email);
+        return $this->repository->getOneUserByEmail($email);
     }
 
     /**
-     * @param string $uuid
-     *
-     * @return null|User
+     * @throws EntityNotFoundException
      */
-    public function getUserByIdIfExist(string $uuid): ? User
+    public function getUserByIdOrFail(string $uuid): ? User
     {
-        $user = $this->repository->getByID($uuid);
+        $user = $this->repository->getOneByID($uuid);
 
         if (!$user) {
-            throw new NotFoundHttpException("There is no user with this id $uuid");
+            throw new EntityNotFoundException("There is no user with this id $uuid");
+        }
+
+        return $user;
+    }
+
+    public function getUserByEmailToLoginOrFail(string $email): ?User
+    {
+        $user = $this->repository->getOneUserByEmail($email);
+
+        if (!$user) {
+            throw new NotFoundHttpException('The email is wrong!');
         }
 
         return $user;

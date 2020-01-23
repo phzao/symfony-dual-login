@@ -7,26 +7,33 @@ use App\Entity\Interfaces\ApiTokenInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Class ApiTokenTest
  * @package App\Tests\Entity
  */
 class ApiTokenTest extends TestCase
 {
+    /**
+     * @throws \Exception
+     */
     public function testApiTokenEmpty()
     {
         $apiToken = new ApiToken();
         $this->assertInstanceOf(ApiTokenInterface::class, $apiToken);
-        $this->assertCount(4, $apiToken->getDetailsToken());
-
-        $keys = array_keys($apiToken->getDetailsToken());
-        $this->assertEquals(["id", "token", "user", "expire_at"], $keys);
-        $this->assertInstanceOf(\DateTimeInterface::class, $apiToken->getExpireAt());
-        $this->assertIsArray($apiToken->getDetailsToken());
-        $this->assertIsString($apiToken->getDateTimeStringFrom(''));
+        $this->assertCount(5, $apiToken->getDetailsToken());
+        $this->assertEmpty($apiToken->getId());
         $this->assertNotEmpty($apiToken->getExpireAt());
-        $this->assertNull($apiToken->isValidToken());
+        $this->assertNull($apiToken->getUser());
+    }
 
-        $expire_at = $apiToken->getExpireAt();
-        $this->assertIsString($expire_at->format('Y-m-d H:i:s'));
+    public function testInvalidateToken()
+    {
+        $apiToken = new ApiToken();
+
+        $data = $apiToken->getDetailsToken();
+        $this->assertNotEmpty($data["expire_at"]);
+        $this->assertEmpty($data["expired_at"]);
+        $apiToken->invalidateToken();
+
+        $data = $apiToken->getDetailsToken();
+        $this->assertNotEmpty($data["expired_at"]);
     }
 }

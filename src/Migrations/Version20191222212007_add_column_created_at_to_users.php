@@ -30,7 +30,6 @@ final class Version20191222212007_add_column_created_at_to_users extends Abstrac
         // this down() migration is auto-generated, please modify it to your needs
         $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'postgresql', 'Migration can only be executed safely on \'postgresql\'.');
 
-        $this->addSql('CREATE SCHEMA public');
         $this->addSql('ALTER TABLE users DROP created_at');
     }
 }

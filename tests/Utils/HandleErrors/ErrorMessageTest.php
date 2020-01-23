@@ -15,27 +15,26 @@ class ErrorMessageTest extends TestCase
     {
         $msg = ErrorMessage::getErrorMessage('');
         $this->assertJson($msg);
-        $this->assertArrayHasKey("status", $this->convertToArray($msg));
-        $this->assertArrayHasKey("message", $this->convertToArray($msg));
-        $this->assertCount(2, $this->convertToArray($msg));
-        $this->assertEmpty($this->convertToArray($msg)["message"]);
-        $this->assertEquals('error', $this->convertToArray($msg)["status"]);
+        $this->assertArrayHasKey("status", $this->convertJsonToArray($msg));
+        $this->assertArrayHasKey("message", $this->convertJsonToArray($msg));
+        $this->assertCount(2, $this->convertJsonToArray($msg));
+        $this->assertEmpty($this->convertJsonToArray($msg)["message"]);
+        $this->assertEquals('error', $this->convertJsonToArray($msg)["status"]);
 
-        $msg = ErrorMessage::getMessageToJson(["message"=>"An error occurred!"]);
+        $msg = ErrorMessage::getArrayMessageToJson(["message"=>"An error occurred!"]);
         $this->assertJson($msg);
         $this->assertEquals('{"message":"An error occurred!"}', $msg);
-        $this->assertArrayHasKey("message", $this->convertToArray($msg));
-        $this->assertEquals("An error occurred!", $this->convertToArray($msg)["message"]);
-        $this->assertCount(1, $this->convertToArray($msg));
+        $this->assertArrayHasKey("message", $this->convertJsonToArray($msg));
+        $this->assertEquals("An error occurred!", $this->convertJsonToArray($msg)["message"]);
+        $this->assertCount(1, $this->convertJsonToArray($msg));
 
-        $msg = ErrorMessage::getErrorData(["key_from_error"=>"error message"]);
+        $msg = ErrorMessage::getArrayMessageToJson(["key_from_error"=>"error message"]);
         $this->assertJson($msg);
-        $this->assertCount(2,  $this->convertToArray($msg));
-        $this->assertArrayHasKey("status", $this->convertToArray($msg));
-        $this->assertArrayHasKey("data", $this->convertToArray($msg));
-        $this->assertEquals('error', $this->convertToArray($msg)["status"]);
-        $this->assertArrayHasKey("key_from_error", $this->convertToArray($msg)["data"]);
-        $this->assertEquals("error message", $this->convertToArray($msg)["data"]["key_from_error"]);
+        $this->assertCount(1,  $this->convertJsonToArray($msg));
+        $this->assertArrayNotHasKey("status", $this->convertJsonToArray($msg));
+        $this->assertArrayNotHasKey("data", $this->convertJsonToArray($msg));
+        $this->assertArrayHasKey("key_from_error", $this->convertJsonToArray($msg));
+        $this->assertEquals(["key_from_error"=>"error message"], $this->convertJsonToArray($msg));
 
     }
 
@@ -44,7 +43,7 @@ class ErrorMessageTest extends TestCase
      *
      * @return array
      */
-    public function convertToArray($json): array
+    public function convertJsonToArray($json): array
     {
         return json_decode($json, true);
     }

@@ -10,7 +10,6 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 /**
- * Class UserService
  * @package App\Tests\Services\Entity
  */
 class UserServiceTest extends WebTestCase
@@ -20,24 +19,16 @@ class UserServiceTest extends WebTestCase
     public function testUserNotExist()
     {
         $userService = $this->getUserService();
-        $this->expectException(NotFoundHttpException::class);
-        $userService->getUserByIdIfExist("491f6278-828e-4f5f-8a48-e11ea346902a");
-    }
-
-    public function testUpdateUserInvalidEntityFail()
-    {
-        $userService = $this->getUserService();
-        $user = new User();
         $this->expectException(EntityNotFoundException::class);
-        $userService->updateStatus($user, "enable");
+        $userService->getUserByIdOrFail("491f6278-828e-4f5f-8a48-e11ea346902a");
     }
 
-    public function testUpdateStatusInvalidFail()
+    public function testUpdateUserWithoutEmailShouldFail()
     {
         $userService = $this->getUserService();
         $user = new User();
-        $this->expectException(UnprocessableEntityHttpException::class);
-        $userService->updateStatus($user, "talk");
+        $this->expectException(NotNullConstraintViolationException::class);
+        $userService->updateStatus($user, "enable");
     }
 
     public function testUpdateSuccess()
@@ -77,7 +68,7 @@ class UserServiceTest extends WebTestCase
         $this->assertInstanceOf(User::class, $findByEmail);
         $this->assertEquals($user->getFullData(), $findByEmail->getFullData());
 
-        $userExist = $userService->getUserByIdIfExist($user->getId());
+        $userExist = $userService->getUserByIdOrFail($user->getId());
         $this->assertInstanceOf(User::class, $userExist);
         $this->assertCount(6, $userExist->getFullData());
         $this->assertEquals($user->getFullData(), $userExist->getFullData());

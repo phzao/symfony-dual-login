@@ -11,36 +11,36 @@ final class ErrorMessage
     /**
      * @param string $message
      * @param string $status
-     * @param array $messageList
-     * @param string $messageKey
+     *
      * @return string
      */
     public static function getErrorMessage(string $message,
-                                           string $status = "error",
-                                           $messageList = [],
-                                           string $messageKey ="message"): string
+                                           string $status = "error"): string
     {
-        $errormsg["status"]    = $status;
-        $errormsg[$messageKey] = empty($message) ? $messageList : $message;
+        $errormsg["status"]  = $status;
+        $errormsg["message"] = $message;
+
         return json_encode($errormsg);
     }
-    /**
-     * @param array  $messageList
-     * @param string $messageKey
-     *
-     * @return string
-     */
-    public static function getErrorData(array $messageList, string $messageKey = "data"): string
-    {
-        return self::getErrorMessage("", "error", $messageList, $messageKey);
-    }
+
     /**
      * @param array $messageList
      *
      * @return string
      */
-    public static function getMessageToJson(array $messageList): string
+    public static function getArrayMessageToJson(array $messageList): string
     {
         return json_encode($messageList);
+    }
+
+    /**
+     * @param string $key
+     * @param string $message
+     *
+     * @return string
+     */
+    public static function getStringMessageToJson(string $key, string $message): string
+    {
+        return json_encode([$key => $message]);
     }
 }

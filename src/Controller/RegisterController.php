@@ -4,19 +4,21 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Repository\Interfaces\UserRepositoryInterface;
-use App\Services\Login\LoginService;
+use App\Services\Entity\Interfaces\UserServiceInterface;
+use App\Services\Log\Interfaces\LoggerServiceInterface;
+use App\Services\Login\LoginServiceInterface;
 use App\Services\Validation\ValidationService;
+use App\Utils\Generators\GenerateEmailAndPasswordInterface;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Symfony\Component\Config\Definition\Exception\ForbiddenOverwriteException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 
 /**
- * Class RegisterController
  * @package App\Controller
  */
 class RegisterController extends APIController
@@ -26,23 +28,16 @@ class RegisterController extends APIController
      */
     private $repository;
 
-    /**
-     * UserController constructor.
-     *
-     * @param UserRepositoryInterface $userRepository
-     */
-    public function __construct(UserRepositoryInterface $userRepository)
+    public function __construct(UserRepositoryInterface $userRepository,
+                                LoggerServiceInterface $loggerService)
     {
+        parent::__construct($loggerService);
         $this->repository = $userRepository;
     }
 
     /**
      * @Route("/register", methods={"POST"})
-     * @param Request                      $request
-     * @param ValidationService            $validationService
-     * @param UserPasswordEncoderInterface $passwordEncoder
-     *
-     * @return JsonResponse
+     * @throws \Exception
      */
     public function save(Request $request,
                          ValidationService $validationService,
@@ -55,71 +50,63 @@ class RegisterController extends APIController
 
             $user->setAttributes($data);
 
-            $validationService->validating($user);
+            $validationService->entityIsValidOrFail($user);
 
             $user->encryptPassword($passwordEncoder);
-            $user->generateUuid();
+
             $this->repository->save($user);
 
             return $this->respondCreated($user->getFullData());
 
         } catch(UniqueConstraintViolationException $PDOException){
-            $msg = $PDOException->getMessage();
 
-            return $this->respondNotAllowed($msg);
+            $this->logger->error($PDOException->getMessage());
+            return $this->respondNotAllowedError("Email already in use! Use another one!");
         } catch (UnprocessableEntityHttpException $exception) {
 
-            return $this->respondValidationError($exception->getMessage());
-        }  catch (NotFoundHttpException $exception) {
-
-            return $this->respondNotFound($exception->getMessage());
+            return $this->respondValidationFail($exception->getMessage());
         } catch (\Exception $exception) {
 
-            return $this->respondBadRequest($exception->getMessage());
+            return $this->respondBadRequestError($exception->getMessage());
         }
     }
 
     /**
      * @Route("/authenticate", methods={"POST"})
-     *
-     * @param Request                     $request
-     * @param LoginService                $loginService
-     *
-     * @return JsonResponse
      */
     public function login(Request $request,
-                          LoginService $loginService)
+                          UserServiceInterface $userService,
+                          LoginServiceInterface $loginService)
     {
         try {
-
             $data = $request->request->all();
 
-            $loginService->isLoginDataValid($data);
+            $loginService->requestShouldHaveEmailAndPasswordOrFail($data);
 
-            $user = $this->repository->getByEmail($data["email"]);
+            $user = $userService->getUserByEmailToLoginOrFail($data["email"]);
 
-            $loginService->isValidCredentials($user, $data["password"]);
+            $loginService->userShouldCanAuthenticateOrFail($user);
+            $loginService->passwordShouldBeRightOrFail($user, $data["password"]);
 
-            $loginData = $loginService->getLogin($user);
+            $loginData = $loginService->getTokenCreateIfNotExist($user);
 
             return $this->respondCreated($loginData->getDetailsToken());
 
-        } catch(UniqueConstraintViolationException $PDOException){
-//            $msg = $PDOException->getMessage();
+        } catch (UnprocessableEntityHttpException $exception) {
 
-            return $this->respondNotAllowed("Email already in use! Use another one!");
-        }  catch (UnprocessableEntityHttpException $exception) {
+            return $this->respondValidationFail($exception->getMessage());
+        } catch(ForbiddenOverwriteException $exception) {
 
-            return $this->respondValidationError($exception->getMessage());
-        }  catch (NotFoundHttpException $exception) {
+            return $this->respondForbiddenFail($exception->getMessage());
+        } catch (NotFoundHttpException $exception) {
 
-            return $this->respondNotFound($exception->getMessage());
+            return $this->respondNotFoundError($exception->getMessage());
         } catch (BadCredentialsException $exception) {
 
-            return $this->respondWithInvalidCredentials($exception->getMessage());
+            return $this->respondInvalidCredentialsFail($exception->getMessage());
         } catch (\Exception $exception) {
 
-            return $this->respondBadRequest($exception->getMessage());
+            return $this->respondBadRequestError($exception->getMessage());
         }
     }
 }

@@ -4,6 +4,7 @@ namespace App\Tests\Utils\Enums;
 
 use App\Utils\Enums\GeneralTypes;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 /**
  * Class GeneralTypesTest
@@ -15,15 +16,21 @@ class GeneralTypesTest extends TestCase
     {
         $list = GeneralTypes::getStatusList();
 
-        $this->assertCount(2, $list);
-        $this->assertEquals(["enable", "disable"], $list);
+        $this->assertEquals(["enable", "disable", "blocked"], $list);
 
         $list = GeneralTypes::getStatusDescriptionList();
         $descriptions = [
             "enable"  => "ativo",
             "disable" => "inativo"
         ];
-        $this->assertCount(2, $list);
         $this->assertEquals($descriptions, $list);
+
+        $this->assertEquals('enable', GeneralTypes::STATUS_ENABLE);
+        $this->assertEquals('disable', GeneralTypes::STATUS_DISABLE);
+        $this->assertEquals('blocked', GeneralTypes::STATUS_BLOCKED);
+
+        $this->expectException(UnprocessableEntityHttpException::class);
+
+        GeneralTypes::isValidDefaultStatusOrFail("ulala");
     }
 }

@@ -53,6 +53,9 @@
         "phpunit/phpunit-mock-objects": "*"
     },
     "config": {
+        "platform": {
+
+        },
         "optimize-autoloader": true,
         "sort-packages": true
     },

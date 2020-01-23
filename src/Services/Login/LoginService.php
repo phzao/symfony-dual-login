@@ -4,19 +4,18 @@ namespace App\Services\Login;
 
 use App\Entity\ApiToken;
 use App\Entity\User;
-use App\Repository\Interfaces\ApiTokenRepositoryInterface;
+use App\Services\Entity\Interfaces\ApiTokenServiceInterface;
 use App\Utils\HandleErrors\ErrorMessage;
-use Doctrine\ORM\EntityNotFoundException;
+use Symfony\Component\Config\Definition\Exception\ForbiddenOverwriteException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
- * Class LoginService
  * @package App\Services\Entity
  */
-final class LoginService
+final class LoginService implements LoginServiceInterface
 {
     /**
      * @var UserPasswordEncoderInterface
@@ -24,27 +23,18 @@ final class LoginService
     private $passwordEncoder;
 
     /**
-     * @var ApiTokenRepositoryInterface
+     * @var ApiTokenServiceInterface
      */
-    private $tokenRepository;
+    private $apiTokenService;
 
-    /**
-     * LoginService constructor.
-     *
-     * @param UserPasswordEncoderInterface $passwordEncoder
-     * @param ApiTokenRepositoryInterface  $tokenRepository
-     */
     public function __construct(UserPasswordEncoderInterface $passwordEncoder,
-                                ApiTokenRepositoryInterface $tokenRepository)
+                                ApiTokenServiceInterface $apiTokenService)
     {
         $this->passwordEncoder = $passwordEncoder;
-        $this->tokenRepository = $tokenRepository;
+        $this->apiTokenService = $apiTokenService;
     }
 
-    /**
-     * @param array $data
-     */
-    public function isLoginDataValid(array $data)
+    public function requestShouldHaveEmailAndPasswordOrFail(array $data)
     {
         $error = [];
 
@@ -60,49 +50,41 @@ final class LoginService
             return ;
         }
 
-        $msg = ErrorMessage::getMessageToJson($error);
+        $msg = ErrorMessage::getArrayMessageToJson($error);
 
         throw new UnprocessableEntityHttpException($msg);
     }
 
-    /**
-     * @param        $user
-     * @param string $password
-     */
-    public function isValidCredentials($user, string  $password)
+    public function userShouldCanAuthenticateOrFail(User $user)
+    {
+        if (!$user->canAuthenticate()) {
+            throw new ForbiddenOverwriteException("This user don't have permission to login!");
+        }
+    }
+
+    public function passwordShouldBeRightOrFail($user, string $password)
     {
         if ($user instanceof UserInterface &&
             $this->passwordEncoder->isPasswordValid($user, $password)) {
-            return ;
+            return true;
         }
-        $msg = ErrorMessage::getErrorMessage("A email or password is incorrect!", "fail");
+
+        $msg = "The password is wrong!";
+
+        if (!$user instanceof UserInterface) {
+            $msg = "The email is wrong!";
+        }
+
         throw new BadCredentialsException($msg);
     }
 
-    /**
-     * @param User $user
-     *
-     * @return null|ApiToken
-     * @throws \Exception
-     */
-    public function getLogin(User $user): ?ApiToken
+    public function getTokenCreateIfNotExist(User $user): ?ApiToken
     {
-        if (!$user->getId()) {
-            $msg = ErrorMessage::getErrorMessage("A valid user is required!", "fail");
-            throw new EntityNotFoundException($msg);
-        }
-
-        $token = $this->tokenRepository->getTheLastTokenByUser($user->getId());
-
-        if ($token) {
+        if ($token = $this->apiTokenService->getAValidApiTokenToUser($user->getId())) {
             return $token;
         }
 
-        $apiToken = new ApiToken();
-        $apiToken->setUser($user);
-        $apiToken->generateUuid();
-
-        $this->tokenRepository->save($apiToken);
+        $apiToken = $this->apiTokenService->registerAndGetApiTokenTo($user);
 
         return $apiToken;
     }

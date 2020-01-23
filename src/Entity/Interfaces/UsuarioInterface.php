@@ -2,36 +2,24 @@
 
 namespace App\Entity\Interfaces;
 
-use App\Entity\User;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
- * Interface UsuarioInterface
  * @package App\Entity\Interfaces
  */
 interface UsuarioInterface extends UserInterface
 {
-    /**
-     * @return array
-     */
     public function getLoginData(): array;
 
-    /**
-     * @return User
-     */
-    public function setDisable(): User;
+    public function getStatus(): string;
 
-    /**
-     * @return User
-     */
-    public function setEnable(): User;
+    public function setDisable();
 
     public function delete(): void;
 
-    /**
-     * @return string
-     */
-    public function getStatus(): string;
+    public function getName(): string;
 
-    public function updatedTime(): void;
+    public function getNameAndId(): array;
+
+    public function canAuthenticate(): bool;
 }

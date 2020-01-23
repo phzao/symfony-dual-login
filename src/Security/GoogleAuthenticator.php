@@ -7,13 +7,13 @@ use App\Services\Entity\Interfaces\UserServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
 use KnpU\OAuth2ClientBundle\Security\Authenticator\SocialAuthenticator;
+use League\OAuth2\Client\Provider\GoogleUser;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 /**
- * Class GoogleAuthenticator
  * @package App\Security
  */
 class GoogleAuthenticator extends SocialAuthenticator
@@ -28,8 +28,6 @@ class GoogleAuthenticator extends SocialAuthenticator
     private $userService;
 
     /**
-     * GoogleAuthenticator constructor.
-     *
      * @param ClientRegistry         $clientRegistry
      * @param EntityManagerInterface $em
      * @param RouterInterface        $router
@@ -45,19 +43,13 @@ class GoogleAuthenticator extends SocialAuthenticator
         $this->router         = $router;
         $this->userService    = $userService;
     }
-    /**
-     * @param Request $request
-     *
-     * @return bool
-     */
+
     public function supports(Request $request)
     {
         return $request->getPathInfo() == '/connect/google/check' && $request->isMethod('GET');
     }
 
     /**
-     * @param Request $request
-     *
      * @return \League\OAuth2\Client\Token\AccessToken|mixed
      */
     public function getCredentials(Request $request)
@@ -66,9 +58,6 @@ class GoogleAuthenticator extends SocialAuthenticator
     }
 
     /**
-     * @param mixed                 $credentials
-     * @param UserProviderInterface $userProvider
-     *
      * @return null|User|object|\Symfony\Component\Security\Core\User\UserInterface
      * @throws \Exception
      */

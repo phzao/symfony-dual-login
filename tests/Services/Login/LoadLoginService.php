@@ -3,9 +3,9 @@
 namespace App\Tests\Services\Login;
 
 use App\Services\Login\LoginService;
+use App\Services\Login\LoginServiceInterface;
 
 /**
- * Trait LoadLoginService
  * @package App\Tests\Services\Login
  */
 trait LoadLoginService
@@ -19,6 +19,7 @@ trait LoadLoginService
 
         $container = self::$kernel->getContainer();
         $container = self::$container;
-        return self::$container->get(LoginService::class);
+
+        return self::$container->get(LoginServiceInterface::class);
     }
 }

@@ -3,10 +3,9 @@
 namespace App\Repository;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Query;
+use Doctrine\Persistence\ObjectRepository;
 
 /**
- * Class BaseRepository
  * @package App\Repository
  */
 class BaseRepository
@@ -17,33 +16,36 @@ class BaseRepository
     protected $entityManager;
 
     /**
-     * @param $entity
+     * @var ObjectRepository
      */
+    protected $objectRepository;
+
+    /**
+     * @var \Doctrine\DBAL\Connection
+     */
+    protected $conn;
+
     public function save($entity)
     {
         $this->entityManager->persist($entity);
         $this->entityManager->flush();
     }
 
-    public function update()
+    public function getOneBy(array $params)
     {
+        return $this->objectRepository->findOneBy($params);
+    }
+
+    public function getAllBy(array $data): ?array
+    {
+        $result = $this->objectRepository->findBy($data);
+
+        return $result ?? [];
+    }
+
+    public function remove($entity)
+    {
+        $this->entityManager->remove($entity);
         $this->entityManager->flush();
     }
-
-    /**
-     * @param array $data
-     * @return array
-     */
-    public function getArrayAll(array $data): array
-    {
-        $query = $this
-                    ->objectRepository
-                    ->createQueryBuilder('c')
-                    ->getQuery();
-
-        return $query
-                    ->setHint(Query::HINT_INCLUDE_META_COLUMNS, true)
-                    ->getArrayResult();
-    }
-
 }

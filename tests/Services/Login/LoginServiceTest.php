@@ -3,15 +3,16 @@
 namespace App\Tests\Services\Entity;
 
 use App\Entity\ApiToken;
+use App\Entity\Interfaces\ApiTokenInterface;
 use App\Entity\User;
+use App\Services\Login\LoginService;
 use App\Tests\Services\Login\LoadLoginService;
-use Doctrine\ORM\EntityNotFoundException;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 
 /**
- * Class LoginServiceTest
  * @package App\Tests\Services\Entity
  */
 class LoginServiceTest extends WebTestCase
@@ -22,21 +23,21 @@ class LoginServiceTest extends WebTestCase
     {
         $loginService = $this->getLoginService();
         $this->expectException(UnprocessableEntityHttpException::class);
-        $loginService->isLoginDataValid(["password" => "123456"]);
+        $loginService->requestShouldHaveEmailAndPasswordOrFail(["password" => "123456"]);
     }
 
     public function testLoginDataWithoutPasswordFail()
     {
         $loginService = $this->getLoginService();
         $this->expectException(UnprocessableEntityHttpException::class);
-        $loginService->isLoginDataValid(["email" => "me@me.com"]);
+        $loginService->requestShouldHaveEmailAndPasswordOrFail(["email" => "me@me.com"]);
     }
 
     public function testLoginDataWithoutDataFail()
     {
         $loginService = $this->getLoginService();
         $this->expectException(UnprocessableEntityHttpException::class);
-        $loginService->isLoginDataValid([]);
+        $loginService->requestShouldHaveEmailAndPasswordOrFail([]);
     }
 
     public function testCredentialsUserNotRegisteredFail()
@@ -45,7 +46,7 @@ class LoginServiceTest extends WebTestCase
         $loginService = $this->getLoginService();
 
         $this->expectException(BadCredentialsException::class);
-        $loginService->isValidCredentials($user, '121212');
+        $loginService->passwordShouldBeRightOrFail($user, '121212');
     }
 
     public function testCredentialsPasswordInvalidFail()
@@ -57,40 +58,21 @@ class LoginServiceTest extends WebTestCase
         $loginService = $this->getLoginService();
 
         $this->expectException(BadCredentialsException::class);
-        $loginService->isValidCredentials($user, '121212');
+        $loginService->passwordShouldBeRightOrFail($user, '121212');
     }
 
     public function testCredentialsValidSuccess()
     {
         $user = new User();
         $encoder = $this->getUserPasswordEncoder();
+        $this->assertInstanceOf(UserPasswordEncoderInterface::class, $encoder);
         $user->setPassword('101010');
+        $this->assertEquals('101010', $user->getPassword());
         $user->encryptPassword($encoder);
+
         $loginService = $this->getLoginService();
+        $this->assertInstanceOf(LoginService::class, $loginService);
 
-        $data = $loginService->isValidCredentials($user, '101010');
-        $this->assertNull($data);
+        $this->assertTrue($loginService->passwordShouldBeRightOrFail($user, '101010'));
     }
-
-    public function testLoginFail()
-    {
-        $loginService = $this->getLoginService();
-        $user = new User();
-        $this->expectException(EntityNotFoundException::class);
-        $loginService->getLogin($user);
-    }
-
-//    public function testLoginSuccess()
-//    {
-//        $loginService = $this->getLoginService();
-//        $userService  = $this->getUserService();
-//
-//        $data     = ["email" => "me@me.com", "password" => "121212"];
-//        $user     = $userService->register($data);
-//        $apiToken = $loginService->getLogin($user);
-//
-//        $this->assertInstanceOf(ApiToken::class, $apiToken);
-//        $this->assertCount(4, $apiToken->getDetailsToken());
-//        $this->assertIsString($apiToken->getId());
-//    }
 }

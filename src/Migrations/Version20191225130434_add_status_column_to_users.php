@@ -30,7 +30,6 @@ final class Version20191225130434_add_status_column_to_users extends AbstractMig
         // this down() migration is auto-generated, please modify it to your needs
         $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'postgresql', 'Migration can only be executed safely on \'postgresql\'.');
 
-        $this->addSql('CREATE SCHEMA public');
         $this->addSql('ALTER TABLE users DROP status');
     }
 }
